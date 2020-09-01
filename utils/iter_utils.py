@@ -54,7 +54,7 @@ class SubprocessGenerator(object):
         return self_dict
 
     def __next__(self):
-        if self.p == None:
+        if self.p is None:
             user_param = self.user_param
             self.user_param = None
             self.p = multiprocessing.Process(target=self.process_func, args=(user_param,) )

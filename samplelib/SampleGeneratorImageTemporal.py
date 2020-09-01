@@ -44,7 +44,7 @@ class SampleGeneratorImageTemporal(SampleGeneratorBase):
 
         mult_max = 4
         samples_sub_len = samples_len - ( (self.temporal_image_count)*mult_max - (mult_max-1)  )
-        
+
         if samples_sub_len <= 0:
             raise ValueError('Not enough samples to fit temporal line.')
 
@@ -53,9 +53,9 @@ class SampleGeneratorImageTemporal(SampleGeneratorBase):
         while True:
 
             batches = None
-            for n_batch in range(self.batch_size):
+            for _ in range(self.batch_size):
 
-                if len(shuffle_idxs) == 0:
+                if not shuffle_idxs:
                     shuffle_idxs = [ *range(samples_sub_len) ]
                     np.random.shuffle (shuffle_idxs)
 

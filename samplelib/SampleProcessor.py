@@ -159,8 +159,8 @@ class SampleProcessor(object):
                     raise ValueError ('expected MODE_ type')
 
                 def do_transform(img, mask):
-                    warp = (img_type==SPTF.IMG_WARPED or img_type==SPTF.IMG_WARPED_TRANSFORMED)
-                    transform = (img_type==SPTF.IMG_WARPED_TRANSFORMED or img_type==SPTF.IMG_TRANSFORMED)
+                    warp = img_type in [SPTF.IMG_WARPED, SPTF.IMG_WARPED_TRANSFORMED]
+                    transform = img_type in [SPTF.IMG_WARPED_TRANSFORMED, SPTF.IMG_TRANSFORMED]
                     flip = img_type != SPTF.IMG_WARPED
 
                     img = imagelib.warp_by_params (params, img, warp, transform, flip, True)

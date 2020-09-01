@@ -3,14 +3,13 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 pil_fonts = {}
-def _get_pil_font (font, size):
+def _get_pil_font(font, size):
     global pil_fonts
     try:
         font_str_id = '%s_%d' % (font, size)
         if font_str_id not in pil_fonts.keys():
             pil_fonts[font_str_id] = ImageFont.truetype(font + ".ttf", size=size, encoding="unic")
-        pil_font = pil_fonts[font_str_id]
-        return pil_font
+        return pil_fonts[font_str_id]
     except:
         return ImageFont.load_default()
 
@@ -46,7 +45,7 @@ def draw_text( image, rect, text, color=(1,1,1), border=0.2, font=None):
     image[t:b, l:r] += get_text_image (  (b-t,r-l,c) , text, color, border, font )
 
 
-def draw_text_lines (image, rect, text_lines, color=(1,1,1), border=0.2, font=None):
+def draw_text_lines(image, rect, text_lines, color=(1,1,1), border=0.2, font=None):
     text_lines_len = len(text_lines)
     if text_lines_len == 0:
         return
@@ -55,7 +54,7 @@ def draw_text_lines (image, rect, text_lines, color=(1,1,1), border=0.2, font=No
     h = b-t
     h_per_line = h // text_lines_len
 
-    for i in range(0, text_lines_len):
+    for i in range(text_lines_len):
         draw_text (image, (l, i*h_per_line, r, (i+1)*h_per_line), text_lines[i], color, border, font)
 
 def get_draw_text_lines ( image, rect, text_lines, color=(1,1,1), border=0.2, font=None):

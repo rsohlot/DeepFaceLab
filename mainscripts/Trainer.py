@@ -245,7 +245,7 @@ def main(args, device_args):
                             if h != max_h or w != max_w:
                                 previews.remove(preview)
                                 previews.append ( (preview_name, cv2.resize(preview_rgb, (max_w, max_h))) )
-                        selected_preview = selected_preview % len(previews)
+                        selected_preview %= len(previews)
                         update_preview = True
                 elif op == 'close':
                     break
@@ -267,7 +267,7 @@ def main(args, device_args):
                 head_height = len(head_lines) * head_line_height
                 head = np.ones ( (head_height,w,c) ) * 0.1
 
-                for i in range(0, len(head_lines)):
+                for i in range(len(head_lines)):
                     t = i*head_line_height
                     b = (i+1)*head_line_height
                     head[t:b, 0:w] += imagelib.get_text_image (  (head_line_height,w,c) , head_lines[i], color=[0.8]*c )
@@ -291,8 +291,8 @@ def main(args, device_args):
 
             key_events = io.get_key_events(wnd_name)
             key, chr_key, ctrl_pressed, alt_pressed, shift_pressed = key_events[-1] if len(key_events) > 0 else (0,0,False,False,False)
-            
-            if key == ord('\n') or key == ord('\r'):
+
+            if key in [ord('\n'), ord('\r')]:
                 s2c.put ( {'op': 'close'} )
             elif key == ord('s'):
                 s2c.put ( {'op': 'save'} )

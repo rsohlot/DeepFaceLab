@@ -455,21 +455,21 @@ class RecycleGANModel(ModelBase):
             b,h,w,c = K.int_shape(input)
 
             x = input
-            
+
             f = ndf
 
             x = ZeroPadding2D((1,1))(x)
             x = XConv2D( f, 4, strides=2, padding='valid', use_bias=True)(x)
             f = min( ndf*8, f*2 )
             x = LeakyReLU(0.2)(x)
-            
-            for i in range(n_layers):
+
+            for _ in range(n_layers):
                 x = ZeroPadding2D((1,1))(x)
                 x = XConv2D( f, 4, strides=2, padding='valid')(x)               
                 f = min( ndf*8, f*2 )
                 x = XNormalization(x)
                 x = LeakyReLU(0.2)(x)
-            
+
             x = ZeroPadding2D((1,1))(x)
             x = XConv2D( f, 4, strides=1, padding='valid')(x)
             x = XNormalization(x)

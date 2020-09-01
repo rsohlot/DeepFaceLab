@@ -1,8 +1,8 @@
 import numpy as np
 import cv2
 
-def equalize_and_stack_square (images, axis=1):
-    max_c = max ([ 1 if len(image.shape) == 2 else image.shape[2]  for image in images ] )
+def equalize_and_stack_square(images, axis=1):
+    max_c = max(1 if len(image.shape) == 2 else image.shape[2] for image in images)
 
     target_wh = 99999
     for i,image in enumerate(images):

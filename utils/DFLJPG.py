@@ -87,7 +87,7 @@ class DFLJPG(object):
                 if is_unk_chunk:
                     raise ValueError("Unknown chunk %X" % (chunk_m_h) )
 
-                if chunk_size == None: #variable size
+                if chunk_size is None: #variable size
                     chunk_size, = struct.unpack (">H", data[data_counter:data_counter+2])
                     chunk_size -= 2
                     data_counter += 2
@@ -132,7 +132,7 @@ class DFLJPG(object):
                         #    inst.shape = (Ydensity, Xdensity, 3)
                     else:
                         raise Exception("Unknown jpeg ID: %s" % (id) )
-                elif chunk['name'] == 'SOF0' or chunk['name'] == 'SOF2':
+                elif chunk['name'] in ['SOF0', 'SOF2']:
                     d, c = chunk['data'], 0
                     c, precision, height, width = struct_unpack (d, c, ">BHH")
                     inst.shape = (height, width, 3)
@@ -151,7 +151,7 @@ class DFLJPG(object):
                         numpyarray = np.asarray( inst.dfl_dict['fanseg_mask'], dtype=np.uint8)
                         inst.dfl_dict['fanseg_mask'] = cv2.imdecode(numpyarray, cv2.IMREAD_UNCHANGED)
 
-            if inst.dfl_dict == None:
+            if inst.dfl_dict is None:
                 return None
 
             return inst

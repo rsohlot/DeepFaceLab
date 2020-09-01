@@ -93,9 +93,7 @@ class DCSCN():
             return image
 
         xform = np.array([[65.738 / 256.0, 129.057 / 256.0, 25.064 / 256.0]], dtype=np.float32)
-        y_image = image.dot(xform.T) + 16.0
-
-        return y_image
+        return image.dot(xform.T) + 16.0
 
 
     def convert_rgb_to_ycbcr(self, image):

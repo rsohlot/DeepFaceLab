@@ -85,8 +85,7 @@ class device:
     @staticmethod
     def getValidDeviceIdxsEnumerator():
         if device.backend == "plaidML":
-            for i in range(plaidML_devices_count):
-                yield i
+            yield from range(plaidML_devices_count)
         elif device.backend == "tensorflow":
             for gpu_idx in range(nvmlDeviceGetCount()):
                 cap = device.getDeviceComputeCapability (gpu_idx)
@@ -200,9 +199,7 @@ class device:
 
     @staticmethod
     def isValidDeviceIdx(idx):
-        if device.backend == "plaidML":
-            return idx in [*device.getValidDeviceIdxsEnumerator()]
-        elif device.backend == "tensorflow":
+        if device.backend in ["plaidML", "tensorflow"]:
             return idx in [*device.getValidDeviceIdxsEnumerator()]
         elif device.backend == "tensorflow-generic":
             return (idx == 0)
@@ -210,11 +207,12 @@ class device:
     @staticmethod
     def getDeviceIdxsEqualModel(idx):
         if device.backend == "plaidML":
-            result = []
             idx_name = plaidML_devices[idx]['description']
-            for i in device.getValidDeviceIdxsEnumerator():
-                if plaidML_devices[i]['description'] == idx_name:
-                    result.append (i)
+            result = [
+                i
+                for i in device.getValidDeviceIdxsEnumerator()
+                if plaidML_devices[i]['description'] == idx_name
+            ]
 
             return result
         elif device.backend == "tensorflow":
@@ -243,10 +241,9 @@ class device:
         return None
 
     @staticmethod
-    def getDeviceID (idx):
-        if device.backend == "plaidML":
-            if idx < plaidML_devices_count:
-                return plaidML_devices[idx]['id'].decode()
+    def getDeviceID(idx):
+        if device.backend == "plaidML" and idx < plaidML_devices_count:
+            return plaidML_devices[idx]['id'].decode()
 
         return None
 

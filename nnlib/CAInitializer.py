@@ -47,8 +47,7 @@ def _create_basis(filters, size, floatx, eps_std):
         a = _symmetrize(a)
         u, _, v = np.linalg.svd(a)
         li.extend(u.T.tolist())
-    p = np.array(li[:filters], dtype=floatx)
-    return p
+    return np.array(li[:filters], dtype=floatx)
 
 def _symmetrize(a):
     return a + a.T - np.diag(a.diagonal())
@@ -58,7 +57,7 @@ def _scale_filters(filters, variance):
     p = np.sqrt(variance / c_var)
     return filters * p
 
-def CAGenerateWeights ( shape, floatx, data_format, eps_std=0.05, seed=None ):
+def CAGenerateWeights( shape, floatx, data_format, eps_std=0.05, seed=None ):
     if seed is not None:
         np.random.seed(seed)
 
@@ -95,7 +94,7 @@ def CAGenerateWeights ( shape, floatx, data_format, eps_std=0.05, seed=None ):
     kernel_fourier_shape = correct_fft(np.zeros(kernel_shape)).shape
 
     init = []
-    for i in range(filters_size):
+    for _ in range(filters_size):
         basis = _create_basis(
             stack_size, np.prod(kernel_fourier_shape), floatx, eps_std)
         basis = basis.reshape((stack_size,) + kernel_fourier_shape)

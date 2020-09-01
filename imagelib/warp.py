@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from utils import random_utils
 
-def gen_warp_params (source, flip, rotation_range=[-10,10], scale_range=[-0.5, 0.5], tx_range=[-0.05, 0.05], ty_range=[-0.05, 0.05]  ):
+def gen_warp_params(source, flip, rotation_range=[-10,10], scale_range=[-0.5, 0.5], tx_range=[-0.05, 0.05], ty_range=[-0.05, 0.05]  ):
     h,w,c = source.shape
     if (h != w) or (w != 64 and w != 128 and w != 256 and w != 512 and w != 1024):
         raise ValueError ('TrainingDataGenerator accepts only square power of 2 images.')
@@ -32,14 +32,13 @@ def gen_warp_params (source, flip, rotation_range=[-10,10], scale_range=[-0.5, 0
     random_transform_mat = cv2.getRotationMatrix2D((w // 2, w // 2), rotation, scale)
     random_transform_mat[:, 2] += (tx*w, ty*w)
 
-    params = dict()
-    params['mapx'] = mapx
-    params['mapy'] = mapy
-    params['rmat'] = random_transform_mat
-    params['w'] = w
-    params['flip'] = flip and np.random.randint(10) < 4
-
-    return params
+    return {
+        'mapx': mapx,
+        'mapy': mapy,
+        'rmat': random_transform_mat,
+        'w': w,
+        'flip': flip and np.random.randint(10) < 4,
+    }
 
 def warp_by_params (params, img, warp, transform, flip, is_border_replicate):
     if warp:

@@ -88,24 +88,25 @@ class InteractBase(object):
             self.focus_wnd_name = None
 
     def destroy_window(self, wnd_name):
-        if wnd_name in self.named_windows:
-            self.on_destroy_window(wnd_name)
-            self.named_windows.pop(wnd_name)
+        if wnd_name not in self.named_windows:
+            return
+        self.on_destroy_window(wnd_name)
+        self.named_windows.pop(wnd_name)
 
-            if wnd_name == self.focus_wnd_name:
-                self.focus_wnd_name = list(self.named_windows.keys())[-1] if len( self.named_windows ) != 0 else None
+        if wnd_name == self.focus_wnd_name:
+            self.focus_wnd_name = list(self.named_windows.keys())[-1] if len( self.named_windows ) != 0 else None
 
-            if wnd_name in self.capture_mouse_windows:
-                self.capture_mouse_windows.pop(wnd_name)
+        if wnd_name in self.capture_mouse_windows:
+            self.capture_mouse_windows.pop(wnd_name)
 
-            if wnd_name in self.capture_keys_windows:
-                self.capture_keys_windows.pop(wnd_name)
+        if wnd_name in self.capture_keys_windows:
+            self.capture_keys_windows.pop(wnd_name)
 
-            if wnd_name in self.mouse_events:
-                self.mouse_events.pop(wnd_name)
+        if wnd_name in self.mouse_events:
+            self.mouse_events.pop(wnd_name)
 
-            if wnd_name in self.key_events:
-                self.key_events.pop(wnd_name)
+        if wnd_name in self.key_events:
+            self.key_events.pop(wnd_name)
 
     def show_image(self, wnd_name, img):
         if wnd_name in self.named_windows:
@@ -150,8 +151,7 @@ class InteractBase(object):
         else: print("progress_bar not set.")
 
     def progress_bar_generator(self, data, desc, leave=True):
-        for x in tqdm( data, desc=desc, leave=leave, ascii=True ):
-            yield x
+        yield from tqdm( data, desc=desc, leave=leave, ascii=True )
 
     def process_messages(self, sleep_time=0):
         self.on_process_messages(sleep_time)
@@ -338,10 +338,9 @@ class InteractDesktop(InteractBase):
             wait_key_time = max(1, int(sleep_time*1000) )
             ord_key = cv2.waitKey(wait_key_time)
             shift_pressed = False
-            if ord_key != -1:
-                if chr(ord_key) >= 'A' and chr(ord_key) <= 'Z':
-                    shift_pressed = True
-                    ord_key += 32
+            if ord_key != -1 and chr(ord_key) >= 'A' and chr(ord_key) <= 'Z':
+                shift_pressed = True
+                ord_key += 32
         else:
             if sleep_time != 0:
                 time.sleep(sleep_time)
@@ -398,7 +397,4 @@ class InteractColab(InteractBase):
         pass
         #print("on_wait_any_key(): Colab does not support")
 
-if is_colab:
-    interact = InteractColab()
-else:
-    interact = InteractDesktop()
+interact = InteractColab() if is_colab else InteractDesktop()

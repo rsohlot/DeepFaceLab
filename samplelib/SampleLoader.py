@@ -116,13 +116,13 @@ class SampleLoader:
                    (i == gradations-1 and s_yaw >= yaw):
                     yaw_samples.append ( s.copy_and_set(sample_type=SampleType.FACE_YAW_SORTED) )
 
-            if len(yaw_samples) > 0:
+            if yaw_samples:
                 yaws_sample_list[i] = yaw_samples
 
         return yaws_sample_list
 
     @staticmethod
-    def upgradeToFaceYawSortedAsTargetSamples (s, t):
+    def upgradeToFaceYawSortedAsTargetSamples(s, t):
         l = len(s)
         if l != len(t):
             raise Exception('upgradeToFaceYawSortedAsTargetSamples() s_len != t_len')
@@ -135,7 +135,7 @@ class SampleLoader:
 
         for t_idx in t_idxs:
             search_idxs = []
-            for i in range(0,l):
+            for i in range(l):
                 search_idxs += [t_idx - i, (l-t_idx-1) - i, t_idx + i, (l-t_idx-1) + i]
 
             for search_idx in search_idxs:

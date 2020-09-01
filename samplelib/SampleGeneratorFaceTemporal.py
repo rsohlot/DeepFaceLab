@@ -44,23 +44,23 @@ class SampleGeneratorFaceTemporal(SampleGeneratorBase):
         samples_len = len(samples)
         if samples_len == 0:
             raise ValueError('No training data provided.')
-            
+
         mult_max = 1
         l = samples_len - ( (self.temporal_image_count)*mult_max - (mult_max-1)  )
 
         samples_idxs = [ *range(l+1) ] [generator_id::self.generators_count]
-        
+
         if len(samples_idxs) - self.temporal_image_count < 0:
             raise ValueError('Not enough samples to fit temporal line.')
-            
+
         shuffle_idxs = []
-        
+
         while True:
 
             batches = None
-            for n_batch in range(self.batch_size):
+            for _ in range(self.batch_size):
 
-                if len(shuffle_idxs) == 0:
+                if not shuffle_idxs:
                     shuffle_idxs = samples_idxs.copy()
                     np.random.shuffle (shuffle_idxs)
 

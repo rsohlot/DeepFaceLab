@@ -103,9 +103,8 @@ class MaskEditor:
 
     def undo_point(self):
         self.screen_changed = True
-        if self.state == self.STATE_NONE:
-            if self.ie_polys.n > 0:
-                self.state = self.STATE_MASKING
+        if self.state == self.STATE_NONE and self.ie_polys.n > 0:
+            self.state = self.STATE_MASKING
 
         if self.state == self.STATE_MASKING:
             if self.ie_polys.n_list().n_dec() == 0 and \
@@ -122,11 +121,10 @@ class MaskEditor:
 
     def redo_point(self):
         self.screen_changed = True
-        if self.state == self.STATE_NONE:
-            if self.ie_polys.n_max > 0:
-                self.state = self.STATE_MASKING
-                if self.ie_polys.n == 0:
-                    self.ie_polys.n_inc()
+        if self.state == self.STATE_NONE and self.ie_polys.n_max > 0:
+            self.state = self.STATE_MASKING
+            if self.ie_polys.n == 0:
+                self.ie_polys.n_inc()
 
         if self.state == self.STATE_MASKING:
             while True:
@@ -219,8 +217,10 @@ class MaskEditor:
 
             prh, prw = self.prwh, self.prwh
 
-            total_w = sum ([ img.shape[1] for (t,img) in self.prev_images ]) + \
-                      sum ([ img.shape[1] for (t,img) in self.next_images ])
+            total_w = sum(img.shape[1] for (t, img) in self.prev_images) + sum(
+                img.shape[1] for (t, img) in self.next_images
+            )
+
 
             total_images_len = len(self.prev_images) + len(self.next_images)
 
@@ -242,18 +242,18 @@ class MaskEditor:
                     new_img = np.zeros ( (prh,prw, sc) )
                     new_img[border:-border,border:-border] = img
 
-                    if t == 2:
-                        cv2.line (new_img, (       prw//2, int(prh//1.5) ), (int(prw/1.5), prh      ) , (0,1,0), thickness=2 )
-                        cv2.line (new_img, ( int(prw/1.5), prh           ), (         prw, prh // 2 ) , (0,1,0), thickness=2 )
-                    elif t == 1:
+                    if t == 1:
                         cv2.line (new_img, ( prw//2, prh//2 ), ( prw, prh      ) , (0,0,1), thickness=2 )
                         cv2.line (new_img, ( prw//2, prh    ), ( prw, prh // 2 ) , (0,0,1), thickness=2 )
 
+                    elif t == 2:
+                        cv2.line (new_img, (       prw//2, int(prh//1.5) ), (int(prw/1.5), prh      ) , (0,1,0), thickness=2 )
+                        cv2.line (new_img, ( int(prw/1.5), prh           ), (         prw, prh // 2 ) , (0,1,0), thickness=2 )
                     images[i] = new_img
 
 
             preview_images = []
-            if len(prev_images) > 0:
+            if prev_images:
                 preview_images += [ np.concatenate (prev_images, axis=1) ]
 
             img = np.full ( (prh,prw, sc), (0,0,1), dtype=np.float )
@@ -261,7 +261,7 @@ class MaskEditor:
 
             preview_images += [ img ]
 
-            if len(next_images) > 0:
+            if next_images:
                 preview_images += [ np.concatenate (next_images, axis=1) ]
 
             preview_images = np.concatenate ( preview_images, axis=1  )
@@ -277,9 +277,7 @@ class MaskEditor:
 
         status_img = self.get_screen_status_block( screens.shape[1], screens.shape[2] )
 
-        result = np.concatenate ( [self.preview_images, screens, status_img], axis=0  )
-
-        return result
+        return np.concatenate ( [self.preview_images, screens, status_img], axis=0  )
 
     def mask_finish(self, n_clip=True):
         if self.state == self.STATE_MASKING:

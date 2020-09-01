@@ -21,8 +21,6 @@ class Model(ModelBase):
 
     #override
     def onInitializeOptions(self, is_first_run, ask_override):
-        yn_str = {True:'y',False:'n'}
-
         default_face_type = 'f'
         if is_first_run:
             self.options['face_type'] = io.input_str ("Half or Full face? (h/f, ?:help skip:f) : ", default_face_type, ['h','f'], help_message="Half face has better resolution, but covers less area of cheeks.").lower()
@@ -31,6 +29,8 @@ class Model(ModelBase):
 
         def_train_bgr = self.options.get('train_bgr', True)
         if is_first_run or ask_override:
+            yn_str = {True:'y',False:'n'}
+
             self.options['train_bgr'] = io.input_bool ("Train bgr? (y/n, ?:help skip: %s) : " % (yn_str[def_train_bgr]), def_train_bgr)
         else:
             self.options['train_bgr'] = self.options.get('train_bgr', def_train_bgr)

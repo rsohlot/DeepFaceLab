@@ -32,19 +32,16 @@ class ConverterImage(Converter):
         self.predictor_func_host.obj.process_messages()
         
     #override
-    def cli_convert_image (self, img_bgr, img_landmarks, debug):
+    def cli_convert_image(self, img_bgr, img_landmarks, debug):
         img_size = img_bgr.shape[1], img_bgr.shape[0]
 
         predictor_input_bgr = cv2.resize ( img_bgr, (self.predictor_input_size, self.predictor_input_size), cv2.INTER_LANCZOS4 )
-        
+
         if debug:
             debugs = [predictor_input_bgr]
-            
+
         output = self.predictor_func ( predictor_input_bgr )
 
         if debug:
             return (predictor_input_bgr,output,)
-        if debug:
-            debugs += [out_img.copy()]
-
         return debugs if debug else output

@@ -69,35 +69,43 @@ class SampleGeneratorFace(SampleGeneratorBase):
 
         ct_samples_len = len(ct_samples) if ct_samples is not None else 0
 
-        if len(samples_idxs) == 0:
+        if not samples_idxs:
             raise ValueError('No training data provided.')
 
-        if self.sample_type == SampleType.FACE_YAW_SORTED or self.sample_type == SampleType.FACE_YAW_SORTED_AS_TARGET:
-            if all ( [ samples[idx] == None for idx in samples_idxs] ):
-                raise ValueError('Not enough training data. Gather more faces!')
+        if self.sample_type in [
+            SampleType.FACE_YAW_SORTED,
+            SampleType.FACE_YAW_SORTED_AS_TARGET,
+        ] and all(samples[idx] == None for idx in samples_idxs):
+            raise ValueError('Not enough training data. Gather more faces!')
 
         if self.sample_type == SampleType.FACE:
             shuffle_idxs = []
-        elif self.sample_type == SampleType.FACE_YAW_SORTED or self.sample_type == SampleType.FACE_YAW_SORTED_AS_TARGET:
+        elif self.sample_type in [
+            SampleType.FACE_YAW_SORTED,
+            SampleType.FACE_YAW_SORTED_AS_TARGET,
+        ]:
             shuffle_idxs = []
             shuffle_idxs_2D = [[]]*samples_len
 
         while True:
             batches = None
-            for n_batch in range(self.batch_size):
+            for _ in range(self.batch_size):
                 while True:
                     sample = None
 
                     if self.sample_type == SampleType.FACE:
-                        if len(shuffle_idxs) == 0:
+                        if not shuffle_idxs:
                             shuffle_idxs = samples_idxs.copy()
                             np.random.shuffle(shuffle_idxs)
 
                         idx = shuffle_idxs.pop()
                         sample = samples[ idx ]
 
-                    elif self.sample_type == SampleType.FACE_YAW_SORTED or self.sample_type == SampleType.FACE_YAW_SORTED_AS_TARGET:
-                        if len(shuffle_idxs) == 0:
+                    elif self.sample_type in [
+                        SampleType.FACE_YAW_SORTED,
+                        SampleType.FACE_YAW_SORTED_AS_TARGET,
+                    ]:
+                        if not shuffle_idxs:
                             shuffle_idxs = samples_idxs.copy()
                             np.random.shuffle(shuffle_idxs)
 
@@ -114,11 +122,14 @@ class SampleGeneratorFace(SampleGeneratorBase):
 
                     if sample is not None:
                         try:
-                            ct_sample=None                            
-                            if ct_samples is not None:                                
-                                if np.random.randint(100) < self.random_ct_sample_chance:
-                                    ct_sample=ct_samples[np.random.randint(ct_samples_len)]
-                            
+                            ct_sample=None
+                            if (
+                                ct_samples is not None
+                                and np.random.randint(100)
+                                < self.random_ct_sample_chance
+                            ):
+                                ct_sample=ct_samples[np.random.randint(ct_samples_len)]
+
                             x = SampleProcessor.process (sample, self.sample_process_options, self.output_sample_types, self.debug, ct_sample=ct_sample)
                         except:
                             raise Exception ("Exception occured in sample %s. Error: %s" % (sample.filename, traceback.format_exc() ) )
