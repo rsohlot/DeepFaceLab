@@ -267,7 +267,7 @@ class DFLPNG(object):
                         numpyarray = np.asarray( inst.dfl_dict['fanseg_mask'], dtype=np.uint8)
                         inst.dfl_dict['fanseg_mask'] = cv2.imdecode(numpyarray, cv2.IMREAD_UNCHANGED)
 
-            if inst.dfl_dict == None:
+            if inst.dfl_dict is None:
                 return None
 
             return inst
@@ -378,13 +378,13 @@ class DFLPNG(object):
                 return chunk.getDictData()
         return None
 
-    def setDFLDictData (self, dict_data=None):
+    def setDFLDictData(self, dict_data=None):
         for chunk in self.chunks:
             if type(chunk) == DFLChunk:
                 self.chunks.remove(chunk)
                 break
 
-        if not dict_data is None:
+        if dict_data is not None:
             chunk = DFLChunk(dict_data)
             self.chunks.insert(-1, chunk)
 

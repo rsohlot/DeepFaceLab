@@ -47,7 +47,7 @@ class ExtractSubprocessor(Subprocessor):
             self.cpu_only     = client_dict['device_type'] == 'CPU'
             self.final_output_path  = Path(client_dict['final_output_dir']) if 'final_output_dir' in client_dict.keys() else None
             self.debug_dir    = client_dict['debug_dir']
-            
+
             #transfer and set stdin in order to work code.interact in debug subprocess
             stdin_fd         = client_dict['stdin_fd']
             if stdin_fd is not None and DEBUG:
@@ -90,14 +90,11 @@ class ExtractSubprocessor(Subprocessor):
                     self.second_pass_e.__enter__()
                 else:
                     self.second_pass_e = None
-                    
+
             elif self.type == 'fanseg':
                 nnlib.import_all (device_config)
                 self.e = facelib.FANSegmentator(256, FaceType.toString(FaceType.FULL) )
                 self.e.__enter__()
-                    
-            elif self.type == 'final':
-                pass
 
         #override
         def on_finalize(self):
@@ -446,7 +443,7 @@ class ExtractSubprocessor(Subprocessor):
                         key_events = io.get_key_events(self.wnd_name)
                         key, chr_key, ctrl_pressed, alt_pressed, shift_pressed = key_events[-1] if len(key_events) > 0 else (0,0,False,False,False)
 
-                        if key == ord('\r') or key == ord('\n'):
+                        if key in [ord('\r'), ord('\n')]:
                             #confirm frame
                             is_frame_done = True
                             data_rects.append (self.rect)
@@ -589,7 +586,7 @@ class ExtractSubprocessor(Subprocessor):
         return self.result
 
     @staticmethod
-    def get_devices_for_config (manual, type, multi_gpu, cpu_only):
+    def get_devices_for_config(manual, type, multi_gpu, cpu_only):
         backend = nnlib.device.backend
         if 'cpu' in backend:
             cpu_only = True
@@ -616,7 +613,7 @@ class ExtractSubprocessor(Subprocessor):
                     dev_name = nnlib.device.getDeviceName(idx)
                     dev_vram = nnlib.device.getDeviceVRAMTotalGb(idx)
 
-                    if not manual and (type == 'rects-dlib' or type == 'rects-mt' ):
+                    if not manual and type in ['rects-dlib', 'rects-mt']:
                         for i in range ( int (max (1, dev_vram / 2) ) ):
                             result += [ (idx, 'GPU', '%s #%d' % (dev_name,i) , dev_vram) ]
                     else:
@@ -643,7 +640,7 @@ class DeletedFilesSearcherSubprocessor(Subprocessor):
         #override
         def process_data(self, data):
             input_path_stem = Path(data[0]).stem
-            return any ( [ input_path_stem == d_stem for d_stem in self.debug_paths_stems] )
+            return any(input_path_stem == d_stem for d_stem in self.debug_paths_stems)
 
         #override
         def get_data_name (self, data):
@@ -727,16 +724,16 @@ def extract_umd_csv(input_file_csv,
     multi_gpu = device_args.get('multi_gpu', False)
     cpu_only = device_args.get('cpu_only', False)
     face_type = FaceType.fromString(face_type)
-    
+
     input_file_csv_path = Path(input_file_csv)
     if not input_file_csv_path.exists():
         raise ValueError('input_file_csv not found. Please ensure it exists.')
-    
+
     input_file_csv_root_path = input_file_csv_path.parent
     output_path = input_file_csv_path.parent / ('aligned_' + input_file_csv_path.name)
-    
+
     io.log_info("Output dir is %s." % (str(output_path)) )
-    
+
     if output_path.exists():
         output_images_paths = Path_utils.get_image_paths(output_path)
         if len(output_images_paths) > 0:
@@ -745,15 +742,15 @@ def extract_umd_csv(input_file_csv,
                 Path(filename).unlink()
     else:
         output_path.mkdir(parents=True, exist_ok=True)
-        
+
     try:
         with open( str(input_file_csv_path), 'r') as f:
             csv_file = f.read()
     except Exception as e:
         io.log_err("Unable to open or read file " + str(input_file_csv_path) + ": " + str(e) )
         return
-        
-    strings = csv_file.split('\n')        
+
+    strings = csv_file.split('\n')
     keys = strings[0].split(',')
     keys_len = len(keys)
     csv_data = []
@@ -762,34 +759,34 @@ def extract_umd_csv(input_file_csv,
         if keys_len != len(values):
             io.log_err("Wrong string in csv file, skipping.")
             continue
-            
+
         csv_data += [ { keys[n] : values[n] for n in range(keys_len) } ]
-    
+
     data = []
     for d in csv_data:
         filename = input_file_csv_root_path / d['FILE']
-        
+
         pitch, yaw, roll = float(d['PITCH']), float(d['YAW']), float(d['ROLL']) 
         if pitch < -90 or pitch > 90 or yaw < -90 or yaw > 90 or roll < -90 or roll > 90:
             continue
-            
+
         pitch_yaw_roll = pitch/90.0, yaw/90.0, roll/90.0
-        
+
         x,y,w,h = float(d['FACE_X']), float(d['FACE_Y']), float(d['FACE_WIDTH']), float(d['FACE_HEIGHT'])
 
         data += [ ExtractSubprocessor.Data(filename=filename, rects=[ [x,y,x+w,y+h] ], pitch_yaw_roll=pitch_yaw_roll) ]
-        
+
     images_found = len(data)
     faces_detected = 0
-    if len(data) > 0:
+    if data:
         io.log_info ("Performing 2nd pass from csv file...")
         data = ExtractSubprocessor (data, 'landmarks', multi_gpu=multi_gpu, cpu_only=cpu_only).run()
-        
+
         io.log_info ('Performing 3rd pass...')
         data = ExtractSubprocessor (data, 'final', image_size, face_type, None, multi_gpu=multi_gpu, cpu_only=cpu_only, manual=False, final_output_path=output_path).run()
-        faces_detected += sum([d.faces_detected for d in data])
-        
-        
+        faces_detected += sum(d.faces_detected for d in data)
+                
+
     io.log_info ('-------------------------')
     io.log_info ('Images found:        %d' % (images_found) )
     io.log_info ('Faces detected:      %d' % (faces_detected) )
@@ -865,7 +862,7 @@ def main(input_dir,
 
         io.log_info ('Performing 3rd pass...')
         data = ExtractSubprocessor (data, 'final', image_size, face_type, debug_dir, multi_gpu=multi_gpu, cpu_only=cpu_only, manual=False, final_output_path=output_path).run()
-        faces_detected += sum([d.faces_detected for d in data])
+        faces_detected += sum(d.faces_detected for d in data)
 
         if manual_fix:
             if all ( np.array ( [ d.faces_detected > 0 for d in data] ) == True ):
@@ -875,7 +872,7 @@ def main(input_dir,
                 io.log_info ('Performing manual fix for %d images...' % (len(fix_data)) )
                 fix_data = ExtractSubprocessor (fix_data, 'landmarks', image_size, face_type, debug_dir, manual=True, manual_window_size=manual_window_size).run()
                 fix_data = ExtractSubprocessor (fix_data, 'final', image_size, face_type, debug_dir, multi_gpu=multi_gpu, cpu_only=cpu_only, manual=False, final_output_path=output_path).run()
-                faces_detected += sum([d.faces_detected for d in fix_data])
+                faces_detected += sum(d.faces_detected for d in fix_data)
 
 
     io.log_info ('-------------------------')

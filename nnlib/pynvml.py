@@ -296,8 +296,7 @@ def _extractNVMLErrorsAsClasses():
         err_val = getattr(this_module, err_name)
         def gen_new(val):
             def new(typ):
-                obj = NVMLError.__new__(typ, val)
-                return obj
+                return NVMLError.__new__(typ, val)
             return new
         new_error_class = type(class_name, (NVMLError,), {'__new__': gen_new(err_val)})
         new_error_class.__module__ = __name__
@@ -321,7 +320,7 @@ def _nvmlGetFunctionPointer(name):
     libLoadLock.acquire()
     try:
         # ensure library was loaded
-        if (nvmlLib == None):
+        if nvmlLib is None:
             raise NVMLError(NVML_ERROR_UNINITIALIZED)
         try:
             _nvmlGetFunctionPointer_cache[name] = getattr(nvmlLib, name)
@@ -349,8 +348,7 @@ def nvmlStructToFriendlyObject(struct):
         key = x[0]
         value = getattr(struct, key)
         d[key] = value
-    obj = nvmlFriendlyObject(d)
-    return obj
+    return nvmlFriendlyObject(d)
 
 # pack the object so it can be passed to the NVML library
 def nvmlFriendlyObjectToStruct(obj, model):
@@ -627,7 +625,7 @@ def _LoadNvmlLibrary():
     '''
     global nvmlLib
 
-    if (nvmlLib == None):
+    if nvmlLib is None:
         # lock to ensure only one caller loads the library
         libLoadLock.acquire()
 
@@ -641,7 +639,7 @@ def _LoadNvmlLibrary():
                             os.path.join(os.getenv("WinDir", r"C:\Windows"), r"System32\nvml.dll"),
                         ]
                         nvmlPath = next((x for x in searchPaths if os.path.isfile(x)), None)
-                        if (nvmlPath == None):
+                        if nvmlPath is None:
                             _nvmlCheckReturn(NVML_ERROR_LIBRARY_NOT_FOUND)
                         else:
                             # cdecl calling convention
@@ -651,8 +649,8 @@ def _LoadNvmlLibrary():
                         nvmlLib = CDLL("libnvidia-ml.so.1")
                 except OSError as ose:
                     _nvmlCheckReturn(NVML_ERROR_LIBRARY_NOT_FOUND)
-                if (nvmlLib == None):
-                    _nvmlCheckReturn(NVML_ERROR_LIBRARY_NOT_FOUND)
+            if nvmlLib is None:
+                _nvmlCheckReturn(NVML_ERROR_LIBRARY_NOT_FOUND)
         finally:
             # lock is always freed
             libLoadLock.release()
@@ -668,7 +666,7 @@ def nvmlShutdown():
     # Atomically update refcount
     global _nvmlLib_refcount
     libLoadLock.acquire()
-    if (0 < _nvmlLib_refcount):
+    if _nvmlLib_refcount > 0:
         _nvmlLib_refcount -= 1
     libLoadLock.release()
     return None
@@ -677,8 +675,7 @@ def nvmlShutdown():
 def nvmlErrorString(result):
     fn = _nvmlGetFunctionPointer("nvmlErrorString")
     fn.restype = c_char_p # otherwise return is an int
-    ret = fn(result)
-    return ret
+    return fn(result)
 
 # Added in 2.285
 def nvmlSystemGetNVMLVersion():
@@ -1008,7 +1005,7 @@ def nvmlDeviceGetSupportedMemoryClocks(handle):
     if (ret == NVML_SUCCESS):
         # special case, no clocks
         return []
-    elif (ret == NVML_ERROR_INSUFFICIENT_SIZE):
+    elif ret == NVML_ERROR_INSUFFICIENT_SIZE:
         # typical case
         clocks_array = c_uint * c_count.value
         c_clocks = clocks_array()
@@ -1017,11 +1014,7 @@ def nvmlDeviceGetSupportedMemoryClocks(handle):
         ret = fn(handle, byref(c_count), c_clocks)
         _nvmlCheckReturn(ret)
 
-        procs = []
-        for i in range(c_count.value):
-            procs.append(c_clocks[i])
-
-        return procs
+        return [c_clocks[i] for i in range(c_count.value)]
     else:
         # error case
         raise NVMLError(ret)
@@ -1036,7 +1029,7 @@ def nvmlDeviceGetSupportedGraphicsClocks(handle, memoryClockMHz):
     if (ret == NVML_SUCCESS):
         # special case, no clocks
         return []
-    elif (ret == NVML_ERROR_INSUFFICIENT_SIZE):
+    elif ret == NVML_ERROR_INSUFFICIENT_SIZE:
         # typical case
         clocks_array = c_uint * c_count.value
         c_clocks = clocks_array()
@@ -1045,11 +1038,7 @@ def nvmlDeviceGetSupportedGraphicsClocks(handle, memoryClockMHz):
         ret = fn(handle, c_uint(memoryClockMHz), byref(c_count), c_clocks)
         _nvmlCheckReturn(ret)
 
-        procs = []
-        for i in range(c_count.value):
-            procs.append(c_clocks[i])
-
-        return procs
+        return [c_clocks[i] for i in range(c_count.value)]
     else:
         # error case
         raise NVMLError(ret)

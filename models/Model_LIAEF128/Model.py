@@ -102,9 +102,7 @@ class Model(ModelBase):
         mAB = np.repeat ( mAB, (3,), -1)
         mBB = np.repeat ( mBB, (3,), -1)
 
-        st = []
-        for i in range(0, len(test_A)):
-            st.append ( np.concatenate ( (
+        st = [np.concatenate ( (
                 test_A[i,:,:,0:3],
                 AA[i],
                 #mAA[i],
@@ -113,8 +111,7 @@ class Model(ModelBase):
                 #mBB[i],
                 AB[i],
                 #mAB[i]
-                ), axis=1) )
-
+                ), axis=1) for i in range(len(test_A))]
         return [ ('LIAEF128', np.concatenate ( st, axis=0 ) ) ]
 
     def predictor_func (self, face):

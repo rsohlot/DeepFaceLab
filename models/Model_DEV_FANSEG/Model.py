@@ -74,29 +74,23 @@ class Model(ModelBase):
     def onGetPreview(self, sample):
         test_A      = sample[0][0][0:4] #first 4 samples
         test_B      = sample[1][0][0:4] #first 4 samples
-        
+
         mAA = self.fan_seg.extract(test_A)
         mBB = self.fan_seg.extract(test_B)
 
         mAA = np.repeat ( mAA, (3,), -1)
         mBB = np.repeat ( mBB, (3,), -1)
-        
-        st = []
-        for i in range(0, len(test_A)):
-            st.append ( np.concatenate ( (
+
+        st = [np.concatenate ( (
                 test_A[i,:,:,0:3],
                 mAA[i],
                 test_A[i,:,:,0:3]*mAA[i],
-                ), axis=1) )
-                
-        st2 = []
-        for i in range(0, len(test_B)):
-            st2.append ( np.concatenate ( (
+                ), axis=1) for i in range(len(test_A))]
+        st2 = [np.concatenate ( (
                 test_B[i,:,:,0:3],
                 mBB[i],
                 test_B[i,:,:,0:3]*mBB[i],
-                ), axis=1) )
-                
+                ), axis=1) for i in range(len(test_B))]
         return [ ('training data', np.concatenate ( st, axis=0 ) ),
                  ('evaluating data', np.concatenate ( st2, axis=0 ) ),
                  ]

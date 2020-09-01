@@ -221,8 +221,7 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                 mean = np.floor(0.5 * kernel_size)
                 kernel_1d = np.array([gaussian(x, mean, sigma) for x in range(kernel_size)])
                 np_kernel = np.outer(kernel_1d, kernel_1d).astype(dtype=K.floatx())
-                kernel = np_kernel / np.sum(np_kernel)
-                return kernel
+                return np_kernel / np.sum(np_kernel)
 
             gauss_kernel = make_kernel(radius)
             gauss_kernel = gauss_kernel[:, :,np.newaxis, np.newaxis]
@@ -231,8 +230,16 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                 inputs = [ input[:,:,:,i:i+1]  for i in range( K.int_shape( input )[-1] ) ]
 
                 outputs = []
-                for i in range(len(inputs)):
-                    outputs += [ K.conv2d( inputs[i] , K.constant(gauss_kernel) , strides=(1,1), padding="same") ]
+                for input_ in inputs:
+                    outputs += [
+                        K.conv2d(
+                            input_,
+                            K.constant(gauss_kernel),
+                            strides=(1, 1),
+                            padding="same",
+                        )
+                    ]
+
 
                 return K.concatenate (outputs, axis=-1)
             return func
@@ -548,11 +555,11 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
             def call(self, inp):
                 x = inp
                 shape_x = x.get_shape().as_list()
-                
+
                 f = Conv2D(self.nc//self.squeeze_factor, 1, kernel_regularizer=keras.regularizers.l2(1e-4))(x)
                 g = Conv2D(self.nc//self.squeeze_factor, 1, kernel_regularizer=keras.regularizers.l2(1e-4))(x)
                 h = Conv2D(self.nc, 1, kernel_regularizer=keras.regularizers.l2(1e-4))(x)
-                
+
                 shape_f = f.get_shape().as_list()
                 shape_g = g.get_shape().as_list()
                 shape_h = h.get_shape().as_list()
@@ -563,12 +570,11 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                 s = Lambda(lambda x: K.batch_dot(x[0], keras.layers.Permute((2,1))(x[1]) ))([flat_g, flat_f])
                 beta = keras.layers.Softmax(axis=-1)(s)
                 o = Lambda(lambda x: K.batch_dot(x[0], x[1]))([beta, flat_h])
-                
+
                 o = Reshape(shape_x[1:])(o)
                 o = Scale()(o)
-                
-                out = Add()([o, inp])
-                return out     
+
+                return Add()([o, inp])     
         nnlib.SelfAttention = SelfAttention
             
         class Adam(keras.optimizers.Optimizer):
@@ -687,46 +693,42 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
         if backend == "plaidML":
             class TileOP_ReflectionPadding2D(nnlib.PMLTile.Operation):
                 def __init__(self, input, w_pad, h_pad):
-                    if K.image_data_format() == 'channels_last':
-                        if input.shape.ndims == 4:
-                            H, W = input.shape.dims[1:3]
-                            if (type(H) == int and h_pad >= H) or \
-                                (type(W) == int and w_pad >= W):
-                                raise ValueError("Paddings must be less than dimensions.")
+                    if K.image_data_format() == 'channels_last' and input.shape.ndims == 4:
+                        H, W = input.shape.dims[1:3]
+                        if (type(H) == int and h_pad >= H) or \
+                            (type(W) == int and w_pad >= W):
+                            raise ValueError("Paddings must be less than dimensions.")
 
-                            c = """ function (I[B, H, W, C] ) -> (O) {{
+                        c = """ function (I[B, H, W, C] ) -> (O) {{
                                     WE = W + {w_pad}*2;
                                     HE = H + {h_pad}*2;
                                 """.format(h_pad=h_pad, w_pad=w_pad)
-                            if w_pad > 0:
-                                c += """
+                        if w_pad > 0:
+                            c += """
                                     LEFT_PAD [b, h, w , c : B, H, WE, C ] = =(I[b, h, {w_pad}-w,            c]), w < {w_pad} ;
                                     HCENTER  [b, h, w , c : B, H, WE, C ] = =(I[b, h, w-{w_pad},            c]), w < W+{w_pad}-1 ;
                                     RIGHT_PAD[b, h, w , c : B, H, WE, C ] = =(I[b, h, 2*W - (w-{w_pad}) -2, c]);
                                     LCR = LEFT_PAD+HCENTER+RIGHT_PAD;
                                 """.format(h_pad=h_pad, w_pad=w_pad)
-                            else:
-                                c += "LCR = I;"
+                        else:
+                            c += "LCR = I;"
 
-                            if h_pad > 0:
-                                c += """
+                        if h_pad > 0:
+                            c += """
                                     TOP_PAD   [b, h, w , c : B, HE, WE, C ] = =(LCR[b, {h_pad}-h,            w, c]), h < {h_pad};
                                     VCENTER   [b, h, w , c : B, HE, WE, C ] = =(LCR[b, h-{h_pad},            w, c]), h < H+{h_pad}-1 ;
                                     BOTTOM_PAD[b, h, w , c : B, HE, WE, C ] = =(LCR[b, 2*H - (h-{h_pad}) -2, w, c]);
                                     TVB = TOP_PAD+VCENTER+BOTTOM_PAD;
                                 """.format(h_pad=h_pad, w_pad=w_pad)
-                            else:
-                                c += "TVB = LCR;"
-
-                            c += "O = TVB; }"
-
-                            inp_dims = input.shape.dims
-                            out_dims = (inp_dims[0], inp_dims[1]+h_pad*2, inp_dims[2]+w_pad*2, inp_dims[3])
                         else:
-                            raise NotImplemented
+                            c += "TVB = LCR;"
+
+                        c += "O = TVB; }"
+
+                        inp_dims = input.shape.dims
+                        out_dims = (inp_dims[0], inp_dims[1]+h_pad*2, inp_dims[2]+w_pad*2, inp_dims[3])
                     else:
                         raise NotImplemented
-
                     super(TileOP_ReflectionPadding2D, self).__init__(c, [('I', input) ],
                             [('O', nnlib.PMLTile.Shape(input.shape.dtype, out_dims ) )])
 
@@ -747,17 +749,13 @@ NLayerDiscriminator = nnlib.NLayerDiscriminator
                 elif backend == "plaidML":
                     return TileOP_ReflectionPadding2D.function(x, self.padding[0], self.padding[1])
                 else:
-                    if K.image_data_format() == 'channels_last':
-                        if x.shape.ndims == 4:
-                            w = K.concatenate ([ x[:,:,w_pad:0:-1,:],
-                                                x,
-                                                x[:,:,-2:-w_pad-2:-1,:] ], axis=2 )
-                            h = K.concatenate ([ w[:,h_pad:0:-1,:,:],
+                    if K.image_data_format() == 'channels_last' and x.shape.ndims == 4:
+                        w = K.concatenate ([ x[:,:,w_pad:0:-1,:],
+                                            x,
+                                            x[:,:,-2:-w_pad-2:-1,:] ], axis=2 )
+                        return K.concatenate ([ w[:,h_pad:0:-1,:,:],
                                                 w,
                                                 w[:,-2:-h_pad-2:-1,:,:] ], axis=1 )
-                            return h
-                        else:
-                            raise NotImplemented
                     else:
                         raise NotImplemented
 

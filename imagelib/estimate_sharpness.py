@@ -142,9 +142,9 @@ def marziliano_method(edges, image):
         for col in range(img_width):
             if gradient_x[row, col] != 0:
                 edge_angles[row, col] = atan2(gradient_y[row, col], gradient_x[row, col]) * (180 / pi)
-            elif gradient_x[row, col] == 0 and gradient_y[row, col] == 0:
+            elif gradient_y[row, col] == 0:
                 edge_angles[row,col] = 0
-            elif gradient_x[row, col] == 0 and gradient_y[row, col] == pi/2:
+            elif gradient_y[row, col] == pi / 2:
                 edge_angles[row, col] = 90
 
 
@@ -158,7 +158,7 @@ def marziliano_method(edges, image):
                 if edges[row, col] == 1:
 
                     # gradient angle = 180 or -180
-                    if quantized_angles[row, col] == 180 or quantized_angles[row, col] == -180:
+                    if quantized_angles[row, col] in [180, -180]:
                         for margin in range(100 + 1):
                             inner_border = (col - 1) - margin
                             outer_border = (col - 2) - margin

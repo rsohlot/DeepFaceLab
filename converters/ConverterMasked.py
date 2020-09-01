@@ -70,14 +70,15 @@ class ConverterMasked(Converter):
 
         if self.mode != 'raw':
 
-            if self.mode == 'seamless':
-                if io.input_bool("Seamless hist match? (y/n skip:n) : ", False):
-                    self.mode = 'seamless-hist-match'
+            if self.mode == 'seamless' and io.input_bool(
+                "Seamless hist match? (y/n skip:n) : ", False
+            ):
+                self.mode = 'seamless-hist-match'
 
-            if self.mode == 'hist-match' or self.mode == 'hist-match-bw':
+            if self.mode in ['hist-match', 'hist-match-bw']:
                 self.masked_hist_match = io.input_bool("Masked hist match? (y/n skip:y) : ", True)
 
-            if self.mode == 'hist-match' or self.mode == 'hist-match-bw' or self.mode == 'seamless-hist-match':
+            if self.mode in ['hist-match', 'hist-match-bw', 'seamless-hist-match']:
                 self.hist_match_threshold = np.clip ( io.input_int("Hist match threshold [0..255] (skip:255) :  ", 255), 0, 255)
 
         if force_mask_mode != -1:
@@ -124,7 +125,7 @@ class ConverterMasked(Converter):
 
     #overridable
     def on_cli_initialize(self):
-        if (self.mask_mode >= 3 and self.mask_mode <= 6) and self.fan_seg == None:
+        if (self.mask_mode >= 3 and self.mask_mode <= 6) and self.fan_seg is None:
             self.fan_seg = FANSegmentator(256, FaceType.toString( self.face_type ) )
 
     #override

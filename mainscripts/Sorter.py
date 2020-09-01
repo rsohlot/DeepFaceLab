@@ -62,7 +62,7 @@ class BlurEstimatorSubprocessor(Subprocessor):
 
     #override
     def process_info_generator(self):
-        for i in range(0, multiprocessing.cpu_count() ):
+        for i in range(multiprocessing.cpu_count()):
             yield 'CPU%d' % (i), {}, {'device_idx': i,
                                       'device_name': 'CPU%d' % (i),
                                       }
@@ -127,7 +127,7 @@ def sort_by_face(input_path):
 
 
     img_list_len = len(img_list)
-    for i in io.progress_bar_generator ( range(0, img_list_len-1), "Sorting"):
+    for i in io.progress_bar_generator(range(img_list_len-1), "Sorting"):
         min_score = float("inf")
         j_min_score = i+1
         for j in range(i+1,len(img_list)):
@@ -339,8 +339,7 @@ class HistSsimSubprocessor(Subprocessor):
 
 def sort_by_hist(input_path):
     io.log_info ("Sorting by histogram similarity...")
-    img_list = HistSsimSubprocessor(Path_utils.get_image_paths(input_path)).run()
-    return img_list
+    return HistSsimSubprocessor(Path_utils.get_image_paths(input_path)).run()
 
 class HistDissimSubprocessor(Subprocessor):
     class Cli(Subprocessor.Cli):
@@ -354,7 +353,7 @@ class HistDissimSubprocessor(Subprocessor):
         def process_data(self, data):
             i = data[0]
             score_total = 0
-            for j in range( 0, self.img_list_len):
+            for j in range(self.img_list_len):
                 if i == j:
                     continue
                 score_total += cv2.compareHist(self.img_list[i][1], self.img_list[j][1], cv2.HISTCMP_BHATTACHARYYA)
@@ -369,7 +368,7 @@ class HistDissimSubprocessor(Subprocessor):
     #override
     def __init__(self, img_list ):
         self.img_list = img_list
-        self.img_list_range = [i for i in range(0, len(img_list) )]
+        self.img_list_range = [i for i in range(len(img_list))]
         self.result = []
         super().__init__('HistDissim', HistDissimSubprocessor.Cli, 60)
 
@@ -383,7 +382,7 @@ class HistDissimSubprocessor(Subprocessor):
 
     #override
     def process_info_generator(self):
-        for i in range(0, min(multiprocessing.cpu_count(), 8) ):
+        for i in range(min(multiprocessing.cpu_count(), 8)):
             yield 'CPU%d' % (i), {}, {'device_idx': i,
                                       'device_name': 'CPU%d' % (i),
                                       'img_list' : self.img_list
@@ -571,7 +570,7 @@ class FinalLoaderSubprocessor(Subprocessor):
 
     #override
     def process_info_generator(self):
-        for i in range(0, min(multiprocessing.cpu_count(), 8) ):
+        for i in range(min(multiprocessing.cpu_count(), 8)):
             yield 'CPU%d' % (i), {}, {'device_idx': i,
                                       'device_name': 'CPU%d' % (i),
                                       'include_by_blur': self.include_by_blur
@@ -693,7 +692,7 @@ def sort_final(input_path, include_by_blur=True):
                (g < grads-1     and s_yaw >= yaw and s_yaw < next_yaw) or \
                (g == grads-1    and s_yaw >= yaw):
                 yaw_samples += [ img ]
-        if len(yaw_samples) > 0:
+        if yaw_samples:
             yaws_sample_list[g] = yaw_samples
 
     total_lack = 0

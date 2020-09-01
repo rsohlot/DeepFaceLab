@@ -89,10 +89,9 @@ class LandmarksExtractor(object):
 
         if image.ndim > 2:
             newDim = np.array([br[1] - ul[1], br[0] - ul[0], image.shape[2]], dtype=np.int32)
-            newImg = np.zeros(newDim, dtype=np.uint8)
         else:
             newDim = np.array([br[1] - ul[1], br[0] - ul[0]], dtype=np.int)
-            newImg = np.zeros(newDim, dtype=np.uint8)
+        newImg = np.zeros(newDim, dtype=np.uint8)
         ht = image.shape[0]
         wd = image.shape[1]
         newX = np.array([max(1, -ul[0] + 1), min(br[0], wd) - ul[0]], dtype=np.int32)

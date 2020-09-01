@@ -78,13 +78,12 @@ class FANSegmentator(object):
         return result
 
     @staticmethod
-    def BuildModel ( resolution, ngf=64, norm='', act='lrelu'):
+    def BuildModel( resolution, ngf=64, norm='', act='lrelu'):
         exec( nnlib.import_all(), locals(), globals() )
         inp = Input ( (resolution,resolution,3) )
         x = inp
         x = FANSegmentator.Flow(ngf=ngf, norm=norm, act=act)(x)
-        model = Model(inp,x)
-        return model
+        return Model(inp,x)
 
     @staticmethod
     def Flow(ngf=64, num_downs=4, norm='', act='lrelu'):

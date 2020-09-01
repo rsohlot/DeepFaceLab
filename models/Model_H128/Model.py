@@ -104,9 +104,7 @@ class Model(ModelBase):
         mAB = np.repeat ( mAB, (3,), -1)
         mBB = np.repeat ( mBB, (3,), -1)
 
-        st = []
-        for i in range(0, len(test_A)):
-            st.append ( np.concatenate ( (
+        st = [np.concatenate ( (
                 test_A[i,:,:,0:3],
                 AA[i],
                 #mAA[i],
@@ -115,8 +113,7 @@ class Model(ModelBase):
                 #mBB[i],
                 AB[i],
                 #mAB[i]
-                ), axis=1) )
-
+                ), axis=1) for i in range(len(test_A))]
         return [ ('H128', np.concatenate ( st, axis=0 ) ) ]
 
     def predictor_func (self, face):
@@ -151,20 +148,16 @@ class Model(ModelBase):
         def Encoder(input_shape):
             input_layer = Input(input_shape)
             x = input_layer
+            x = downscale(128)(x)
+            x = downscale(256)(x)
+            x = downscale(512)(x)
+            x = downscale(1024)(x)
             if not lighter_ae:
-                x = downscale(128)(x)
-                x = downscale(256)(x)
-                x = downscale(512)(x)
-                x = downscale(1024)(x)
                 x = Dense(512)(Flatten()(x))
                 x = Dense(8 * 8 * 512)(x)
                 x = Reshape((8, 8, 512))(x)
                 x = upscale(512)(x)
             else:
-                x = downscale(128)(x)
-                x = downscale(256)(x)
-                x = downscale(512)(x)
-                x = downscale(1024)(x)
                 x = Dense(256)(Flatten()(x))
                 x = Dense(8 * 8 * 256)(x)
                 x = Reshape((8, 8, 256))(x)
